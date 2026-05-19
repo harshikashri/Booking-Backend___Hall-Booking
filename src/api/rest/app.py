@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from sqlalchemy import text
 
 from src.data.clients.postgres import get_or_create_engine
+from src.api.rest.routes.halls import router as halls_router
 from src.api.rest.routes.health import router as health_router
 
 
@@ -43,5 +44,6 @@ app = FastAPI(
 )
 
 app.include_router(router=health_router)
+app.include_router(router=halls_router)
 
 

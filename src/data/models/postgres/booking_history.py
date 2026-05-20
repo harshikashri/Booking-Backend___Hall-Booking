@@ -24,7 +24,6 @@ class BookingHistory(Base):
 
     booking_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("bookings.id", ondelete="CASCADE"),
         nullable=False
     )
 
@@ -36,7 +35,6 @@ class BookingHistory(Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
-        ForeignKey("users.id"),
         nullable=False
     )
 

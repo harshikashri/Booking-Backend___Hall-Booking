@@ -10,6 +10,7 @@ from src.api.rest.routes.facility import router as facilities_router
 from src.api.rest.routes.favorite import router as favorites_router
 from src.api.rest.routes.halls import router as halls_router
 from src.api.rest.routes.health import router as health_router
+from src.api.rest.routes.search import router as search_router
 
 
 
@@ -53,5 +54,6 @@ app.include_router(router=halls_router)
 app.include_router(router=facilities_router)
 app.include_router(router=favorites_router)
 app.include_router(router=booking_router)
+app.include_router(router=search_router)
 
 

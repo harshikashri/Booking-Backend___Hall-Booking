@@ -132,6 +132,7 @@ class SearchRepository:
 					Booking.hall_id == hall.id,
 					Booking.start_datetime < search_end,
 					Booking.end_datetime > search_start,
+					Booking.status != "cancelled",
 				)
 			)
 

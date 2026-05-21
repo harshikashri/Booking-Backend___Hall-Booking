@@ -23,13 +23,17 @@ from src.api.rest.middleware.error_handler import add_error_handlers
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-	"""Run startup database checks and dispose of the engine on shutdown."""
+    """Run startup database checks and dispose of the engine on shutdown.
+
+    Performs a lightweight connectivity check and ensures SQLAlchemy models
+    are created on first startup. The engine is disposed when the app shuts
+    down to release pooled connections.
+    """
 
     engine = get_or_create_engine()
 
     # Startup validation keeps the app honest about database connectivity.
     try:
-
         async with engine.begin() as conn:
             await conn.execute(text("SELECT 1"))
             await conn.run_sync(Base.metadata.create_all)
@@ -37,17 +41,14 @@ async def lifespan(app: FastAPI):
         print("Database connected")
 
     except Exception as e:
-
         print("Database connection failed")
         print(e)
 
-    
-
+    # Yield control to the application while it's running.
     yield
 
     # Release pooled database connections during shutdown.
     await engine.dispose()
-
     print("Database connections closed")
 
 

@@ -1,3 +1,5 @@
+"""Free-slot lookup route for hall availability queries."""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -36,6 +38,7 @@ async def get_free_slots_for_hall(
 	),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Return the free time windows for a single hall."""
 	free_slots_service = FreeSlotsService(session)
 	return await free_slots_service.get_free_slots(
 		hall_id=hall_id,

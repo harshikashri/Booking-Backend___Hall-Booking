@@ -1,3 +1,5 @@
+"""Persistence helpers for computing free slots on a single hall."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,6 +14,7 @@ from src.data.models.postgres.hall import Hall
 
 
 class FreeSlotsRepository:
+	"""Query hall bookings and calculate free windows."""
 	def __init__(self, session: AsyncSession):
 		self.session = session
 

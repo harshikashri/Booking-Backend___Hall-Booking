@@ -1,3 +1,5 @@
+"""ORM model for halls."""
+
 import uuid
 
 from sqlalchemy import Boolean
@@ -13,6 +15,7 @@ from src.data.models.postgres.base import Base
 
 
 class Hall(Base):
+    """Persist hall metadata and activation state."""
 
     __tablename__ = "halls"
 

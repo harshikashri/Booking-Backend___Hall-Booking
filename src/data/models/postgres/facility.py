@@ -1,3 +1,5 @@
+"""ORM model for facilities."""
+
 from sqlalchemy import DateTime
 from sqlalchemy import String
 from sqlalchemy import func
@@ -8,6 +10,7 @@ from src.data.models.postgres.base import Base
 
 
 class Facility(Base):
+    """Persist a named facility that can be attached to halls."""
 
     __tablename__ = "facilities"
 

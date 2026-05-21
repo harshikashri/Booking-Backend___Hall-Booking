@@ -1,3 +1,5 @@
+"""Health-check route used by deployment and local startup checks."""
+
 from fastapi import (
     APIRouter,
     Depends,
@@ -16,6 +18,7 @@ router = APIRouter(
     status_code=status.HTTP_200_OK
 )
 async def health_check():
+    """Verify that the database connection is reachable."""
     engine = get_or_create_engine()
 
     # Startup

@@ -1,3 +1,5 @@
+"""Hall routes for public browsing and admin hall management."""
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
@@ -32,6 +34,7 @@ async def create_hall(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Create a new hall record."""
 	hall_service = HallService(session)
 	return await hall_service.create_hall(hall_data.model_dump())
 
@@ -45,6 +48,7 @@ async def get_halls(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Return halls available to regular users."""
 	hall_service = HallService(session)
 	return await hall_service.get_available_halls()
 
@@ -58,6 +62,7 @@ async def get_all_halls(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Return all halls, including disabled ones, for admins."""
 	hall_service = HallService(session)
 	return await hall_service.get_all_halls()
 
@@ -68,6 +73,7 @@ async def update_hall(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Update hall metadata and activation status."""
 	hall_service = HallService(session)
 	update_payload = hall_data.model_dump(exclude_unset=True)
 	hall_name = update_payload.pop("hall_name")
@@ -87,6 +93,7 @@ async def add_facility_to_hall(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Attach a facility to a hall."""
 	hall_service = HallService(session)
 	return await hall_service.add_facility_to_hall(
 		hall_name,
@@ -103,6 +110,7 @@ async def update_hall_facility_status(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Toggle a facility's active state for a hall."""
 	hall_service = HallService(session)
 	return await hall_service.update_hall_facility_status(
 		facility_data.hall_name,

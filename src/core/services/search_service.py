@@ -1,13 +1,16 @@
+"""Business logic for hall availability search queries."""
+
 from datetime import datetime
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.exceptions import InvalidTimeWindowError
 from src.data.repositories.search_repo import SearchRepository
 
 
 class SearchService:
+	"""Validate search input and shape search results for API responses."""
 	def __init__(self, session: AsyncSession):
 		self.search_repository = SearchRepository(session)
 
@@ -16,12 +19,9 @@ class SearchService:
 		start_datetime: datetime,
 		end_datetime: datetime,
 	):
-		"""Validate that start is before end."""
+		"""Validate that the search window has a positive duration."""
 		if start_datetime >= end_datetime:
-			raise HTTPException(
-				status_code=status.HTTP_400_BAD_REQUEST,
-				detail="Start datetime must be before end datetime",
-			)
+			raise InvalidTimeWindowError("Start datetime must be before end datetime")
 
 	async def search_available_halls(
 		self,
@@ -32,14 +32,11 @@ class SearchService:
 		facility_id: int | None = None,
 		facility_name: str | None = None,
 	) -> dict:
-		"""
-		Search for available hall slots based on filters.
-		"""
-		# Validate datetime range
+		"""Return halls and the time slots available within the search window."""
+		# Validate datetime range before touching the database.
 		self._validate_datetime_range(search_start, search_end)
 
-		# At least one filter should be provided (optional but recommended)
-		# We allow search with just datetime range to show all halls
+		# The search can run with only a date window so users can browse all halls.
 
 		results = await self.search_repository.search_halls(
 			search_start=search_start,

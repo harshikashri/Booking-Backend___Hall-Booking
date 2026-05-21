@@ -1,3 +1,5 @@
+"""Async PostgreSQL engine and session factory helpers."""
+
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
@@ -27,8 +29,8 @@ DATABASE_URL = (
 _engine: AsyncEngine | None = None
 
 
-# Create or Get Existing Engine
 def get_or_create_engine() -> AsyncEngine:
+    """Create the shared async engine once and reuse it across requests."""
 
     global _engine
 
@@ -59,8 +61,8 @@ def get_or_create_engine() -> AsyncEngine:
     return _engine
 
 
-# Session Factory
 def get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Build the async session factory bound to the shared engine."""
 
     return async_sessionmaker(
         bind=get_or_create_engine(),
@@ -73,8 +75,5 @@ def get_session_factory() -> async_sessionmaker[AsyncSession]:
     )
 
 
-# async def init_db():
-#     engine = get_or_create_engine()
 
-#     async with engine.begin() as conn:
-#         await conn.run_sync(Base.metadata.create_all)
+# The commented init helper is left here intentionally as a local bootstrap aid.

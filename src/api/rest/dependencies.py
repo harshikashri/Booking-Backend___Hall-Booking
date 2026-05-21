@@ -12,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from src.config.settings import settings
 from src.data.clients.postgres import get_session_factory
+from src.core.services.notification_service import publish_pending_notifications
 
 # =========================
 # Database Dependency
@@ -28,6 +29,7 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
             yield session
 
             await session.commit()
+            await publish_pending_notifications(session)
 
         except Exception:
 
@@ -68,6 +70,18 @@ def get_current_user(
     return payload
 
 
+def get_current_user_from_token(token: str):
+    payload = _decode_token_value(token)
+
+    if not payload.get("username"):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+        )
+
+    return payload
+
+
 def get_current_admin_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
 ):
@@ -90,3 +104,17 @@ def get_current_admin_user(
         )
 
     return payload
+
+
+def _decode_token_value(token: str):
+    try:
+        return jwt.decode(
+            token,
+            settings.SECRET_KEY,
+            algorithms=[settings.ALGORITHM],
+        )
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or expired token",
+        )

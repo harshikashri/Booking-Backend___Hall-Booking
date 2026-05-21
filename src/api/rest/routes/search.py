@@ -1,3 +1,5 @@
+"""Search routes for finding available halls and time windows."""
+
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
@@ -30,19 +32,7 @@ async def search_available_halls(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
-	"""
-	Search for available halls within a time window.
-
-	Query Parameters:
-	- start_datetime: Required. Start of search window (ISO format)
-	- end_datetime: Required. End of search window (ISO format)
-	- hall_id: Optional. Filter by specific hall ID
-	- hall_name: Optional. Filter by specific hall name
-	- facility_id: Optional. Filter by facility ID
-	- facility_name: Optional. Filter by facility name
-
-	Returns halls with available time slots during the search window.
-	"""
+	"""Search active halls and return their available slots in the window."""
 	search_service = SearchService(session)
 
 	return await search_service.search_available_halls(

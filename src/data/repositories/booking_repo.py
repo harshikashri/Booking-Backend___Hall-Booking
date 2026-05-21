@@ -1,3 +1,5 @@
+"""Persistence helpers for booking records and booking views."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -12,6 +14,7 @@ from src.data.models.postgres.user import User
 
 
 class BookingRepository:
+	"""Run booking-specific queries and persistence operations."""
 
 	def __init__(self, session: AsyncSession):
 		self.session = session
@@ -22,6 +25,7 @@ class BookingRepository:
 		user_name: str,
 		hall_name: str,
 	) -> dict:
+		"""Shape a joined row into the API response payload."""
 		return {
 			"id": booking.id,
 			"user_id": booking.user_id,
@@ -36,26 +40,31 @@ class BookingRepository:
 		}
 
 	async def update_booking_status(self, booking: Booking, status: str) -> Booking:
+		"""Persist a new booking status and refresh the ORM object."""
 		booking.status = status
 		await self.session.flush()
 		await self.session.refresh(booking)
 		return booking
 
 	async def get_hall_by_id(self, hall_id: UUID) -> Hall | None:
+		"""Return the hall associated with a UUID, if it exists."""
 		result = await self.session.execute(select(Hall).where(Hall.id == hall_id))
 		return result.scalar_one_or_none()
 
 	async def get_hall_by_name(self, hall_name: str) -> Hall | None:
+		"""Return the hall associated with a name, if it exists."""
 		result = await self.session.execute(select(Hall).where(Hall.name == hall_name))
 		return result.scalar_one_or_none()
 
 	async def get_booking_by_id(self, booking_id: UUID) -> Booking | None:
+		"""Return a booking by its primary key."""
 		result = await self.session.execute(
 			select(Booking).where(Booking.id == booking_id)
 		)
 		return result.scalar_one_or_none()
 
 	async def get_bookings_by_user_id(self, user_id: UUID) -> list[dict]:
+		"""Return booking view rows for a single user."""
 		result = await self.session.execute(
 			select(
 				Booking,
@@ -74,6 +83,7 @@ class BookingRepository:
 		]
 
 	async def get_all_bookings(self) -> list[dict]:
+		"""Return booking view rows for all users."""
 		result = await self.session.execute(
 			select(
 				Booking,
@@ -90,7 +100,29 @@ class BookingRepository:
 			for booking, user_name, hall_name in rows
 		]
 
+	async def get_booking_records_by_hall_id(
+		self,
+		hall_id: UUID,
+	) -> list[tuple[Booking, str, str]]:
+		"""Return active bookings for a hall together with user and hall names."""
+		result = await self.session.execute(
+			select(
+				Booking,
+				User.name.label("user_name"),
+				Hall.name.label("hall_name"),
+			)
+			.join(User, User.id == Booking.user_id)
+			.join(Hall, Hall.id == Booking.hall_id)
+			.where(
+				Booking.hall_id == hall_id,
+				Booking.status != "cancelled",
+			)
+			.order_by(Booking.start_datetime.desc())
+		)
+		return list(result.all())
+
 	async def delete_booking(self, booking: Booking) -> None:
+		"""Delete a booking row and flush the change to the session."""
 		await self.session.delete(booking)
 		await self.session.flush()
 
@@ -101,6 +133,7 @@ class BookingRepository:
 		end_datetime: datetime,
 		exclude_booking_id: UUID | None = None,
 	) -> Booking | None:
+		"""Return the first booking that overlaps the requested window."""
 		query = select(Booking).where(
 			Booking.hall_id == hall_id,
 			Booking.start_datetime < end_datetime,
@@ -120,6 +153,7 @@ class BookingRepository:
 		start_datetime: datetime,
 		end_datetime: datetime,
 	) -> Booking:
+		"""Create and persist a new booking row."""
 		booking = Booking(
 			user_id=user_id,
 			hall_id=hall_id,
@@ -139,6 +173,7 @@ class BookingRepository:
 		start_datetime: datetime,
 		end_datetime: datetime,
 	) -> Booking:
+		"""Update the start and end time of an existing booking."""
 		booking.start_datetime = start_datetime
 		booking.end_datetime = end_datetime
 

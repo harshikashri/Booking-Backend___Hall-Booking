@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-	"""Typed settings for database and JWT configuration."""
+    """Typed settings for database and JWT configuration."""
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
     POSTGRES_HOST: str
@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     POSTGRES_DB: str
     SECRET_KEY: str
     ALGORITHM: str
-
 
     class Config:
         env_file = ".env"

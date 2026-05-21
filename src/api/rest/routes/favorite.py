@@ -1,3 +1,5 @@
+"""Favorite routes for adding and removing a user's saved halls."""
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import Path
@@ -25,6 +27,7 @@ async def add_favorite(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Add a hall to the authenticated user's favorites."""
 	favorite_service = FavoriteService(session)
 	return await favorite_service.add_favorite(current_user, hall_name)
 
@@ -38,5 +41,6 @@ async def delete_favorite(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Remove a hall from the authenticated user's favorites."""
 	favorite_service = FavoriteService(session)
 	return await favorite_service.delete_favorite(current_user, hall_name)

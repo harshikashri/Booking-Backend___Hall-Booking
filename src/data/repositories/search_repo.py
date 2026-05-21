@@ -1,3 +1,5 @@
+"""Persistence helpers for hall availability search queries."""
+
 from datetime import datetime
 from uuid import UUID
 
@@ -11,6 +13,7 @@ from src.data.models.postgres.hall_facility import HallFacility
 
 
 class SearchRepository:
+	"""Query halls and derive available time slots for a search window."""
 	def __init__(self, session: AsyncSession):
 		self.session = session
 
@@ -132,6 +135,7 @@ class SearchRepository:
 					Booking.hall_id == hall.id,
 					Booking.start_datetime < search_end,
 					Booking.end_datetime > search_start,
+					Booking.status != "cancelled",
 				)
 			)
 

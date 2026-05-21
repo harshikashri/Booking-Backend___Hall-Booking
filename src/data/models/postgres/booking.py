@@ -1,3 +1,5 @@
+"""ORM model for bookings."""
+
 import uuid
 
 from sqlalchemy import CheckConstraint
@@ -13,6 +15,7 @@ from src.data.models.postgres.base import Base
 
 
 class Booking(Base):
+    """Persist booked hall time windows and their current state."""
 
     __tablename__ = "bookings"
 

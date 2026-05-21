@@ -1,3 +1,5 @@
+"""Facility routes for admin-only facility creation."""
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import status
@@ -27,5 +29,6 @@ async def create_facility(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Create a facility record for later hall assignment."""
 	facility_service = FacilityService(session)
 	return await facility_service.create_facility(facility_data.model_dump())

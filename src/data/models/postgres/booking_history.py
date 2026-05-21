@@ -1,3 +1,5 @@
+"""ORM model for archived booking history entries."""
+
 import uuid
 
 from sqlalchemy import BigInteger
@@ -13,6 +15,7 @@ from src.data.models.postgres.base import Base
 
 
 class BookingHistory(Base):
+    """Persist an audit trail of booking state changes."""
 
     __tablename__ = "booking_history"
 

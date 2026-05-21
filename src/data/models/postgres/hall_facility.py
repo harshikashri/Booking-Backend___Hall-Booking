@@ -1,3 +1,5 @@
+"""ORM model for the hall-facility association table."""
+
 import uuid
 
 from sqlalchemy import Boolean
@@ -12,6 +14,7 @@ from src.data.models.postgres.base import Base
 
 
 class HallFacility(Base):
+    """Persist the relationship between a hall and a facility."""
 
     __tablename__ = "hall_facilities"
 

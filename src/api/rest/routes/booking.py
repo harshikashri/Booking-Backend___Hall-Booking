@@ -1,3 +1,5 @@
+"""Booking routes for creating, listing, updating, and cancelling bookings."""
+
 from __future__ import annotations
 
 from datetime import datetime
@@ -34,6 +36,7 @@ async def book_hall(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Create a booking for the authenticated user."""
 	booking_service = BookingService(session)
 	return await booking_service.book_hall(current_user, booking_data.model_dump())
 
@@ -47,6 +50,7 @@ async def get_my_bookings(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Return bookings belonging to the authenticated user."""
 	booking_service = BookingService(session)
 	return await booking_service.get_my_bookings(current_user)
 
@@ -60,6 +64,7 @@ async def get_all_bookings(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Return all bookings for administrative review."""
 	booking_service = BookingService(session)
 	return await booking_service.get_all_bookings(admin_user)
 
@@ -74,6 +79,7 @@ async def get_bookings_by_user_id(
 	admin_user: dict = Depends(get_current_admin_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Return bookings for a specific user ID."""
 	booking_service = BookingService(session)
 	return await booking_service.get_bookings_by_user_id(admin_user, user_id)
 
@@ -89,6 +95,7 @@ async def update_booking_timing(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Move an existing booking to a new time window."""
 	booking_service = BookingService(session)
 	return await booking_service.update_booking_timing(
 		current_user,
@@ -107,5 +114,6 @@ async def cancel_booking(
 	current_user: dict = Depends(get_current_user),
 	session: AsyncSession = Depends(get_db_session),
 ):
+	"""Cancel the authenticated user's booking."""
 	booking_service = BookingService(session)
 	return await booking_service.cancel_booking(current_user, booking_id)

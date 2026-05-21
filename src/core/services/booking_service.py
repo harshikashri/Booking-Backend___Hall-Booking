@@ -1,18 +1,30 @@
+"""Business logic for booking creation, cancellation, and timing updates."""
+
 from __future__ import annotations
 
 from datetime import datetime
 from datetime import timezone
 from uuid import UUID
 
-from fastapi import HTTPException
-from fastapi import status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from src.core.exceptions import AdminAccessRequiredError
+from src.core.exceptions import BookingCancellationOwnershipError
+from src.core.exceptions import BookingNotFoundError
+from src.core.exceptions import BookingOwnershipError
+from src.core.exceptions import BookingOverlapError
+from src.core.exceptions import CancelledBookingUpdateError
+from src.core.exceptions import HallInactiveError
+from src.core.exceptions import HallNotFoundError
+from src.core.exceptions import InvalidTimeWindowError
+from src.core.exceptions import InvalidTokenPayloadError
+from src.core.exceptions import InvalidUserIdFormatError
 from src.data.repositories.booking_repo import BookingRepository
 
 
 class BookingService:
+    """Coordinate booking requests with repository queries and validation."""
 
     def __init__(self, session: AsyncSession):
         self.booking_repository = BookingRepository(session)
@@ -20,39 +32,33 @@ class BookingService:
 
 
     def _ensure_admin_only(self, current_user: dict):
+        """Raise when a non-admin user reaches an admin-only path."""
         if current_user.get("role") != "admin":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin access required",
-            )
+            raise AdminAccessRequiredError()
 
   
 
     def _get_user_id(self, current_user: dict) -> UUID:
+        """Extract the authenticated user's UUID from the token payload."""
         user_id_value = current_user.get("user_id")
 
         if not user_id_value:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token payload",
-            )
+            raise InvalidTokenPayloadError()
 
         try:
             return UUID(str(user_id_value))
 
         except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid user ID format in token",
-            )
+            raise InvalidUserIdFormatError()
 
     async def get_my_bookings(self, current_user: dict):
-        
+        """Return bookings for the caller's account."""
         user_id = self._get_user_id(current_user)
 
         return await self.booking_repository.get_bookings_by_user_id(user_id)
 
     async def get_all_bookings(self, current_user: dict):
+        """Return all bookings for administrative views."""
         return await self.booking_repository.get_all_bookings()
 
     async def get_bookings_by_user_id(
@@ -60,6 +66,7 @@ class BookingService:
         current_user: dict,
         user_id: UUID,
     ):
+        """Return bookings for a specific user ID."""
         return await self.booking_repository.get_bookings_by_user_id(user_id)
 
     async def cancel_booking(
@@ -67,22 +74,17 @@ class BookingService:
         current_user: dict,
         booking_id: UUID,
     ):
+        """Cancel a booking owned by the authenticated user."""
 
         user_id = self._get_user_id(current_user)
 
         booking = await self.booking_repository.get_booking_by_id(booking_id)
 
         if not booking:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Booking not found",
-            )
+            raise BookingNotFoundError()
 
         if booking.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only cancel your own booking",
-            )
+            raise BookingCancellationOwnershipError()
 
         await self.booking_repository.update_booking_status(booking, "cancelled")
 
@@ -93,13 +95,12 @@ class BookingService:
         start_datetime: datetime,
         end_datetime: datetime,
     ):
+        """Reject inverted or empty booking windows."""
         if start_datetime >= end_datetime:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Start time must be before end time",
-            )
+            raise InvalidTimeWindowError()
 
     def _normalize_datetime(self, value: datetime) -> datetime:
+        """Normalize timezone-aware values to naive UTC datetimes."""
         if value.tzinfo is None:
             return value
 
@@ -112,6 +113,7 @@ class BookingService:
         end_datetime: datetime,
         exclude_booking_id: UUID | None = None,
     ):
+        """Ensure the requested window does not overlap another booking."""
         overlapping_booking = (
             await self.booking_repository.get_overlapping_booking(
                 hall_id=hall_id,
@@ -122,16 +124,14 @@ class BookingService:
         )
 
         if overlapping_booking:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Booking time overlaps with an existing booking for this hall",
-            )
+            raise BookingOverlapError()
 
     async def book_hall(
         self,
         current_user: dict,
         booking_data: dict,
     ):
+        """Create a booking after checking hall activity and overlap rules."""
 
         user_id = self._get_user_id(current_user)
 
@@ -155,16 +155,10 @@ class BookingService:
         )
 
         if not hall:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Hall not found",
-            )
+            raise HallNotFoundError()
 
         if not hall.is_active:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Hall is inactive",
-            )
+            raise HallInactiveError()
 
         await self._ensure_no_overlap(
             hall.id,
@@ -183,10 +177,7 @@ class BookingService:
             return booking
 
         except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Start time must be before end time",
-            )
+            raise InvalidTimeWindowError()
 
     async def update_booking_timing(
         self,
@@ -195,6 +186,7 @@ class BookingService:
         start_datetime: datetime,
         end_datetime: datetime,
     ):
+        """Move an existing booking to a new time window."""
 
         user_id = self._get_user_id(current_user)
 
@@ -216,22 +208,13 @@ class BookingService:
         )
 
         if not booking:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Booking not found",
-            )
+            raise BookingNotFoundError()
 
         if booking.user_id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You can only update your own booking",
-            )
+            raise BookingOwnershipError()
 
         if booking.status == "cancelled":
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cancelled booking cannot be updated",
-            )
+            raise CancelledBookingUpdateError()
 
         await self._ensure_no_overlap(
             hall_id=booking.hall_id,
@@ -252,7 +235,4 @@ class BookingService:
             return updated_booking
 
         except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Start time must be before end time",
-            )
+            raise InvalidTimeWindowError()

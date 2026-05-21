@@ -1,3 +1,5 @@
+"""ORM model for application users."""
+
 import uuid
 
 from sqlalchemy import Boolean
@@ -14,6 +16,7 @@ from src.data.models.postgres.base import Base
 
 
 class User(Base):
+	"""Persist user identity, credentials, and role information."""
 
 	__tablename__ = "users"
 

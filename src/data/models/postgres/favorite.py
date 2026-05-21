@@ -1,3 +1,5 @@
+"""ORM model for user favorites."""
+
 import uuid
 
 from sqlalchemy import DateTime
@@ -11,6 +13,7 @@ from src.data.models.postgres.base import Base
 
 
 class Favorite(Base):
+    """Persist the user-to-hall favorite relationship."""
 
     __tablename__ = "favorites"
 

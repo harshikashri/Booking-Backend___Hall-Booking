@@ -69,6 +69,14 @@ class BookingService:
         """Return bookings for a specific user ID."""
         return await self.booking_repository.get_bookings_by_user_id(user_id)
 
+    async def get_bookings_by_hall_name(
+        self,
+        current_user: dict,
+        hall_name: str,
+    ):
+        """Return bookings for a specific hall name."""
+        return await self.booking_repository.get_bookings_by_hall_name(hall_name)
+
     async def cancel_booking(
         self,
         current_user: dict,

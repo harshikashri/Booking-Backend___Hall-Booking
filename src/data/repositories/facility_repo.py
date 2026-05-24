@@ -11,6 +11,13 @@ class FacilityRepository:
 	def __init__(self, session: AsyncSession):
 		self.session = session
 
+	async def get_all_facilities(self) -> list[Facility]:
+		"""Return all facilities ordered by name."""
+		result = await self.session.execute(
+			select(Facility).order_by(Facility.name)
+		)
+		return list(result.scalars().all())
+
 	async def create_facility(self, facility_data: dict) -> Facility:
 		"""Insert a new facility row and return the refreshed ORM object."""
 		facility = Facility(

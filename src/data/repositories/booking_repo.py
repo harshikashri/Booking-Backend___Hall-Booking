@@ -82,6 +82,25 @@ class BookingRepository:
 			for booking, user_name, hall_name in rows
 		]
 
+	async def get_bookings_by_hall_name(self, hall_name: str) -> list[dict]:
+		"""Return booking view rows for a single hall name."""
+		result = await self.session.execute(
+			select(
+				Booking,
+				User.name.label("user_name"),
+				Hall.name.label("hall_name"),
+			)
+			.join(User, User.id == Booking.user_id)
+			.join(Hall, Hall.id == Booking.hall_id)
+			.where(Hall.name == hall_name)
+			.order_by(Booking.start_datetime.desc())
+		)
+		rows = result.all()
+		return [
+			self._build_booking_view_payload(booking, user_name, hall_name)
+			for booking, user_name, hall_name in rows
+		]
+
 	async def get_all_bookings(self) -> list[dict]:
 		"""Return booking view rows for all users."""
 		result = await self.session.execute(

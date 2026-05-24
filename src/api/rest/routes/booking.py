@@ -84,6 +84,21 @@ async def get_bookings_by_user_id(
 	return await booking_service.get_bookings_by_user_id(admin_user, user_id)
 
 
+@router.get(
+	"/halls/{hall_name}",
+	response_model=BookingListRead,
+	status_code=status.HTTP_200_OK,
+)
+async def get_bookings_by_hall_name(
+	hall_name: str = Path(..., description="Hall name"),
+	admin_user: dict = Depends(get_current_admin_user),
+	session: AsyncSession = Depends(get_db_session),
+):
+	"""Return bookings for a specific hall name."""
+	booking_service = BookingService(session)
+	return await booking_service.get_bookings_by_hall_name(admin_user, hall_name)
+
+
 @router.patch(
 	"/{booking_id}/timing",
 	response_model=BookingRead,

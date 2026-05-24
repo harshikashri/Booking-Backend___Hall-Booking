@@ -19,6 +19,19 @@ router = APIRouter(
 )
 
 
+@router.get(
+	"/",
+	response_model=list[FacilityRead],
+)
+async def get_all_facilities(
+	admin_user: dict = Depends(get_current_admin_user),
+	session: AsyncSession = Depends(get_db_session),
+):
+	"""Return all facilities available for hall assignment."""
+	facility_service = FacilityService(session)
+	return await facility_service.get_all_facilities()
+
+
 @router.post(
 	"/",
 	response_model=FacilityRead,

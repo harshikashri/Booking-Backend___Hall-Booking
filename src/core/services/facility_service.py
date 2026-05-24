@@ -12,6 +12,10 @@ class FacilityService:
 	def __init__(self, session: AsyncSession):
 		self.facility_repository = FacilityRepository(session)
 
+	async def get_all_facilities(self):
+		"""Return every facility available for hall assignment."""
+		return await self.facility_repository.get_all_facilities()
+
 	async def create_facility(self, facility_data: dict):
 		"""Create a facility if the name does not already exist."""
 		existing_facility = await self.facility_repository.get_facility_by_name(

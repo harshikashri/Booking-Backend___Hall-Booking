@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import (
 from src.config.settings import settings
 
 
-DATABASE_URL = (
+DATABASE_URL = settings.DATABASE_URL or (
     f"postgresql+asyncpg://"
     f"{settings.POSTGRES_USER}:"
     f"{settings.POSTGRES_PASSWORD}@"

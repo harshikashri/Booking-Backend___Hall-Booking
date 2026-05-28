@@ -1,22 +1,18 @@
-"""Application settings loaded from environment variables."""
-
 from pydantic import model_validator
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    """Typed settings for database and JWT configuration."""
     DATABASE_URL: str | None = None
-    POSTGRES_USER: str | None = None
-    POSTGRES_PASSWORD: str | None = None
-    POSTGRES_HOST: str | None = None
-    POSTGRES_PORT: int | None = None
-    POSTGRES_DB: str | None = None
+
+
     SECRET_KEY: str
     ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
 
-    class Config:
-        env_file = ".env"
+    model_config = {
+        "env_file": ".env"
+    }
 
     @model_validator(mode="after")
     def validate_database_settings(self):
